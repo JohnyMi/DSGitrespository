@@ -1,21 +1,22 @@
-def stav_sportku():
+def stav_sportku(pocet_cisiel=6, od=1, do=49):
     vybrane_cisla = []
-    while len (vybrane_cisla) < 6:
-        cislo = input("Zadaj číslo od 1-49 bez opakovania: ")
+    print(f"Vyber si svojích {pocet_cisiel} šťastných čísiel!")
+    while len (vybrane_cisla) < pocet_cisiel:
+        cislo = input(f"Zadaj číslo od {od} do {do} bez opakovania: ")
         #Test zadanej hodnoty, či je zadané číslo
         if cislo.isnumeric():
             cislo = int(cislo)
         else:
-            print("Zadaná hodnota nie je číslo, next time zadaj číslo")
+            print(f"Zadaná hodnota ´{cislo}´ nie je číslo, next time zadaj číslo!")
             continue
 
         #Test interval
-        if not 49 >= cislo >= 1:
+        if not do >= cislo >= od:
             print("Zadané číslo sa nenachádza v intervale 1-49")
             continue
 
         if cislo in vybrane_cisla:
-            print("Toto číslo už bolo zadané, zadaj iné")
+            print(f"Číslo {cislo} už bolo zadané, zadaj iné!")
         else:
             vybrane_cisla.append(cislo)
     return vybrane_cisla
