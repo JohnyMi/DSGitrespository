@@ -132,3 +132,14 @@ bookings.client_id=clients.client_id
 group by bookings.client_id
 having Number_of_rented_cars > 1
 order by Number_of_rented_cars desc;
+
+
+-- CTE (Common table expressions) - a_names
+-- Umožnuje dočasne uložiť vysledok dotazu a odkazovať naň v ďalšej časti
+with a_names as(
+select clients.name, clients.surname, bookings.total_amount
+FROM bookings
+INNER JOIN clients ON
+bookings.client_id = clients.client_id
+where name like 'A%' or surname like 'A%')
+select avg(total_amount) from a_names;
