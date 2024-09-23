@@ -142,4 +142,123 @@ FROM bookings
 INNER JOIN clients ON
 bookings.client_id = clients.client_id
 where name like 'A%' or surname like 'A%')
-select avg(total_amount) from a_names;
+select avg(total_amount) from a_names; 
+
+-- Extras --
+-- 1. Vypíšte názvy všetkých áut, ktoré boli prenajaté aspoň na 5 dní.
+-- Požadovaný výstup: názvy áut a počet dní prenájmu.
+select cars.producer, cars.model, DATEDIFF(bookings.end_date, bookings.start_date) AS rental_days
+FROM bookings
+INNER JOIN cars ON
+bookings.car_id = cars.car_id
+where DATEDIFF(bookings.end_date, bookings.start_date) >= 5;
+
+-- 2. Vypíšte všetky rezervácie, kde celková suma za prenájom prekročila 500 a auto bolo prenajaté na viac ako 3 dni.
+-- Požadovaný výstup: ID rezervácie, meno zákazníka, model auta a celková suma.
+select bookings.booking_id, clients.name, clients.surname, cars.model, total_amount, DATEDIFF(bookings.end_date, bookings.start_date) AS rental_days
+FROM bookings
+INNER JOIN clients ON
+bookings.client_id = clients.client_id
+INNER JOIN cars ON 
+bookings.car_id = cars.car_id
+where total_amount > 500 and DATEDIFF(bookings.end_date, bookings.start_date) > 3;
+
+-- 3. Vypíšte najdrahšie auto, ktoré si zákazník prenajal medzi 1. a 15. júlom 2020.
+-- Požadovaný výstup: názov auta, meno zákazníka, cena za prenájom.
+with max_amount as(
+select cars.producer, cars.model, clients.name,clients.surname, total_amount
+FROM bookings
+INNER JOIN clients ON
+bookings.client_id = clients.client_id
+INNER JOIN cars ON
+bookings.car_id = cars.car_id
+where start_date >= '2020-07-01'
+and end_date <= '2020-07-15')
+select producer, model, name, surname, total_amount 
+from max_amount
+WHERE total_amount = (SELECT MAX(total_amount) FROM max_amount); 
+
+-- 4. Vypíšte počet zákazníkov, ktorí si prenajali auto s výkonom motora vyšším ako 150 koní, 
+-- a celkovú sumu, ktorú za prenájom zaplatili.
+-- Požadovaný výstup: počet zákazníkov, celková suma.
+WITH clients_count AS (
+    SELECT clients.client_id, clients.name, clients.surname, bookings.total_amount, cars.horse_power
+    FROM bookings
+    INNER JOIN clients ON bookings.client_id = clients.client_id
+    INNER JOIN cars ON bookings.car_id = cars.car_id
+    WHERE cars.horse_power > 150)
+SELECT COUNT(DISTINCT client_id) AS 'Number of clients', SUM(total_amount) AS 'Total amount'
+FROM clients_count;
+
+-- 5. Vypíšte názvy miest, v ktorých žijú zákazníci, ktorí si prenajali auto viac ako dvakrát, 
+-- a usporiadajte tieto mestá podľa počtu zákazníkov, ktorí si auto prenajali.
+-- Požadovaný výstup: názvy miest a počet zákazníkov z daného mesta
+ with rental_counts as(
+ select clients.client_id, clients.city, count(bookings.booking_id) as rental_times  
+  FROM bookings
+ INNER JOIN clients ON
+ bookings.client_id=clients.client_id
+ group by clients.client_id, clients.city
+ having rental_times >2)
+ select city, count(client_id) as 'Number_of_clients'
+ from rental_counts
+ group by city
+ order by Number_of_clients desc;
+ 
+-- 6. Zistite, ktoré auto bolo prenajaté najčastejšie, a uveďte koľkokrát bolo prenajaté.
+-- Požadovaný výstup: názov auta, počet prenájmov.
+WITH top_rented_car as(
+select cars.car_id, cars.producer, cars.model, count(bookings.booking_id) as rental_count
+FROM bookings
+INNER JOIN cars ON
+bookings.car_id=cars.car_id
+group by cars.car_id, cars.producer, cars.model)
+select producer, model, rental_count as 'Number_of_bookings'
+from top_rented_car
+order by rental_count desc;
+
+-- 7. Vypíšte zákazníkov, ktorí si prenajali auto s výkonom nad 150 koní a zaplatili za prenájom viac ako 500.
+-- Požadovaný výstup: meno, priezvisko zákazníka, model auta a suma.
+select clients.name, clients.surname, cars.producer, cars.model, cars.horse_power, bookings.total_amount
+FROM bookings
+INNER JOIN clients ON
+bookings.client_id=clients.client_id
+INNER JOIN cars ON
+bookings.car_id=cars.car_id
+where horse_power>150 and total_amount>500;
+
+-- 8. Vypíšte zoznam áut, ktoré neboli prenajaté v roku 2020.
+-- Požadovaný výstup: názvy áut.
+select cars.producer, cars.model,bookings.start_date
+FROM bookings
+INNER JOIN cars ON
+bookings.car_id=cars.car_id
+where start_date like'2020%';
+-- skúška zmeniť rok či sa zobrazí v tabuľke
+select * from bookings;
+update bookings set start_date='2021-07-06', end_date='2021-07-08' where booking_id=56;
+
+-- 9. Vypíšte všetkých zákazníkov, ktorí si prenajali auto medzi januárom a marcom 2020, a usporiadajte ich podľa mesta.
+-- Požadovaný výstup: meno, priezvisko, mesto, dátum prenájmu.
+
+update bookings set start_date='2020-01-06', end_date='2020-01-08' where booking_id=46;
+update bookings set start_date='2020-02-16', end_date='2020-02-19' where booking_id=47;
+
+select clients.name, clients.surname,clients.city,bookings.start_date
+FROM bookings
+INNER JOIN clients ON
+bookings.client_id=clients.client_id
+where start_date between '2020-01-01' and '2020-03-31'
+ORDER BY clients.city, clients.name, clients.surname, bookings.start_date;
+
+-- 10. Zistite priemerné náklady na prenájom auta pre všetkých zákazníkov, ktorí si prenajali auto aspoň 3-krát.
+-- Požadovaný výstup: meno, priezvisko zákazníka, priemerná suma prenájmu.
+select clients.name, clients.surname, count(bookings.booking_id) as 'Number_of_bookings', avg(bookings.total_amount) as 'Average_cost'
+FROM bookings
+INNER JOIN clients ON
+bookings.client_id=clients.client_id
+INNER JOIN cars ON
+bookings.car_id=cars.car_id
+group by bookings.client_id
+having count(bookings.booking_id) >=3;
+
