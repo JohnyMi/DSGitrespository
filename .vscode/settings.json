@@ -1,0 +1,7 @@
+{
+    "javascript.suggest.autoImports": false,
+    "typescript.suggest.autoImports": false,
+    "javascript.suggest.includeCompletionsForImportStatements": false,
+    "typescript.suggest.includeCompletionsForImportStatements": false,
+    "typescript.preferences.includePackageJsonAutoImports": "off"
+}
